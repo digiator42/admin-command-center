@@ -3,7 +3,8 @@ use gritshield::{
     prelude::*,
     security::{middleware::LoggerMiddleware},
 };
-use sea_orm::{sqlx};
+
+use crate::workers::monitor;
 
 mod pages {
     pub mod dashboard;
@@ -13,6 +14,8 @@ mod pages {
 
 mod root;
 mod bootstrap;
+mod workers;
+mod models;
 
 #[get("/")]
 async fn index(_ctx: RequestContext) -> Response {
@@ -38,6 +41,12 @@ async fn static_assets(ctx: RequestContext) -> Response {
 async fn main() {
     let shared_db = Arc::new(bootstrap::connect_and_migrate_db().await);
 
+    let monitor_db_pool = std::sync::Arc::clone(&shared_db);
+    tokio::spawn(async move {
+        println!("[MONITOR] Launching upstream engine health worker thread cluster...");
+        monitor::start_service_monitor_loop(monitor_db_pool).await;
+    });
+
     let router = Router::new()
         .add_middleware(LoggerMiddleware)
         .mound_db(shared_db)
@@ -45,5 +54,5 @@ async fn main() {
         .expect("Failed to map file paths tree");
 
     println!("[GRITSHIELD] Booting engine cluster...");
-    run_server("127.0.0.1", "8080", router, true).await;
+    run_server("127.0.0.1", "8000", router, true).await;
 }

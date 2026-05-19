@@ -1,12 +1,13 @@
+use gritshield::core::env::get_env;
 use sea_orm::DatabaseConnection;
 use sqlx::migrate::Migrator;
-use sqlx::{Pool, Postgres};
-use std::sync::Arc;
 
 static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 
 pub async fn connect_and_migrate_db() -> DatabaseConnection {
-    let sqlx_pool = sqlx::PgPool::connect("postgres://postgres:admin@localhost:5432/acc_db")
+    let url = get_env("PG_URL", "");
+
+    let sqlx_pool = sqlx::PgPool::connect(&url)
         .await
         .unwrap();
 
