@@ -1,9 +1,12 @@
+use std::path::Path;
+
 use gritshield::{
     core::server::run_server,
     prelude::*,
     security::{db::connect, middleware::LoggerMiddleware},
 };
-
+use sea_orm::{DatabaseConnection, sqlx};
+use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
 
 mod pages {
     pub mod dashboard;
@@ -12,6 +15,7 @@ mod pages {
 }
 
 mod root;
+mod bootstrap;
 
 #[get("/")]
 async fn index(_ctx: RequestContext) -> Response {
@@ -35,11 +39,7 @@ async fn static_assets(ctx: RequestContext) -> Response {
 
 #[tokio::main]
 async fn main() {
-    // Standard SQLite connection
-    let db = connect("postgres://postgres:admin@localhost:5432/acc_db")
-        .await
-        .unwrap();
-    let shared_db = Arc::new(db);
+    let shared_db = Arc::new(bootstrap::connect_and_migrate_db().await);
 
     let router = Router::new()
         .add_middleware(LoggerMiddleware)
