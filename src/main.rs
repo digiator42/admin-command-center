@@ -1,12 +1,9 @@
-use std::path::Path;
-
 use gritshield::{
     core::server::run_server,
     prelude::*,
-    security::{db::connect, middleware::LoggerMiddleware},
+    security::{middleware::LoggerMiddleware},
 };
-use sea_orm::{DatabaseConnection, sqlx};
-use sqlx::{migrate::Migrator, postgres::PgPoolOptions};
+use sea_orm::{sqlx};
 
 mod pages {
     pub mod dashboard;
@@ -22,8 +19,8 @@ async fn index(_ctx: RequestContext) -> Response {
     render!(
         "Welcome Home",
         html! {
-            h1 { "Victory!" }
-            p { "Your application is successfully running under the Gritshield kernel." }
+            h1 { "ACC!" }
+            p { "The centralized orchestration engine, security gateway, and operational dashboard for gritshield infrastructure." }
         }
     )
 }
