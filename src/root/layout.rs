@@ -6,7 +6,8 @@ pub fn main_layout(title: &str, content: maud::Markup) -> maud::Markup {
         html {
             head {
                 title { (title) }
-                link rel="stylesheet" href="/static/style.css";
+                link rel="stylesheet" href="/static/css/style.css";
+                script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" {}
             }
             body {
                 nav {
@@ -17,7 +18,7 @@ pub fn main_layout(title: &str, content: maud::Markup) -> maud::Markup {
                     (content)
                 }
                 footer {
-                    p { "Crafted safely with Gritshield Web Engine Engine" }
+                    p class="text-3xl font-bold underline" { "Crafted safely with Gritshield Web Engine Engine" }
                 }
             }
         }

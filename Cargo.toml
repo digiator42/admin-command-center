@@ -1,5 +1,5 @@
 [package]
-name = "pppp"
+name = "admin-command-center"
 version = "0.1.0"
 edition = "2024"
 
@@ -8,3 +8,4 @@ gritshield = { path = "../gritshield" } # Pointing locally for now, change to ve
 tokio = { version = "1.0", features = ["full"] }
 maud = "0.25"
 sea-orm = { version = "1.0", features = ["sqlx-postgres", "runtime-tokio-native-tls", "macros"] }
+ctor = "1.0"

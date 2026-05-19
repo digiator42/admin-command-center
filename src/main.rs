@@ -1,4 +1,15 @@
-use gritshield::{core::server::run_server, prelude::*, security::db::connect};
+use gritshield::{
+    core::server::run_server,
+    prelude::*,
+    security::{db::connect, middleware::LoggerMiddleware},
+};
+
+
+mod pages {
+    pub mod dashboard;
+    #[path = "docs/[..path].rs"]
+    pub mod docs_wildcard;
+}
 
 mod root;
 
@@ -16,7 +27,10 @@ async fn index(_ctx: RequestContext) -> Response {
 #[get("/static/:*path")]
 async fn static_assets(ctx: RequestContext) -> Response {
     let path = ctx.params.get("*path").unwrap().as_str();
-    Response::static_file(path)
+
+    let full_fs_path = format!("static/{}", path);
+
+    Response::static_file(&full_fs_path)
 }
 
 #[tokio::main]
@@ -27,7 +41,11 @@ async fn main() {
         .unwrap();
     let shared_db = Arc::new(db);
 
-    let router = Router::new().mound_db(shared_db);
+    let router = Router::new()
+        .add_middleware(LoggerMiddleware)
+        .mound_db(shared_db)
+        .mount_file_routes("src/pages")
+        .expect("Failed to map file paths tree");
 
     println!("[GRITSHIELD] Booting engine cluster...");
     run_server("127.0.0.1", "8080", router, true).await;
