@@ -1,7 +1,7 @@
 use gritshield::{
     core::server::run_server,
     prelude::*,
-    security::middleware::{AuthMiddleware, LoggerMiddleware},
+    security::middleware::{AuthMiddleware, LoggerMiddleware, MetricsTracker},
 };
 
 use crate::workers::monitor;
@@ -10,13 +10,18 @@ mod pages {
     pub mod dashboard;
     #[path = "docs/[..path].rs"]
     pub mod docs_wildcard;
+    mod login {
+        pub mod get;
+        pub mod post;
+    }
+    pub mod register;
 }
 
-mod root;
 mod bootstrap;
-mod workers;
 mod models;
+mod root;
 mod security;
+mod workers;
 
 #[get("/")]
 async fn index(_ctx: RequestContext) -> Response {
@@ -49,7 +54,9 @@ async fn main() {
     });
 
     let public_paths = vec![
-        "/static/:*path".to_string(),
+        "/static/*".to_string(),
+        "/login/*".to_string(),
+        "/register".to_string(),
         "/dashboard".to_string(),
     ];
 
