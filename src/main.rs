@@ -1,7 +1,7 @@
 use gritshield::{
     core::server::run_server,
     prelude::*,
-    security::{middleware::LoggerMiddleware},
+    security::middleware::{AuthMiddleware, LoggerMiddleware},
 };
 
 use crate::workers::monitor;
@@ -16,6 +16,7 @@ mod root;
 mod bootstrap;
 mod workers;
 mod models;
+mod security;
 
 #[get("/")]
 async fn index(_ctx: RequestContext) -> Response {
@@ -47,8 +48,14 @@ async fn main() {
         monitor::start_service_monitor_loop(monitor_db_pool).await;
     });
 
+    let public_paths = vec![
+        "/static/:*path".to_string(),
+        "/dashboard".to_string(),
+    ];
+
     let router = Router::new()
         .add_middleware(LoggerMiddleware)
+        .add_middleware(AuthMiddleware::new_session(public_paths))
         .mound_db(shared_db)
         .mount_file_routes("src/pages")
         .expect("Failed to map file paths tree");

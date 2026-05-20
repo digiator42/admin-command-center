@@ -7,6 +7,7 @@ use std::sync::atomic::Ordering;
 use sea_orm::EntityTrait;
 
 use crate::models::monitored_services;
+use crate::security::rbac::RbacExtensions;
 
 pub async fn handler(ctx: RequestContext) -> Response {
     // Fetch our atomic numbers securely out of the thread pool context
@@ -22,13 +23,26 @@ pub async fn handler(ctx: RequestContext) -> Response {
         }
     }
 
+    // Capture user profile parameters smoothly from current context
+    let current_role = ctx.get_user_role().unwrap_or_else(|| "Guest".to_string());
+
     // Render the panel body using 100% type-safe Maud code with Tailwind utility styles!
     let panel_body = html! {
         div class="space-y-8" {
-            div {
-                h1 class="text-3xl font-bold tracking-tight text-slate-100" { "Kernel Engine Telemetry" }
-                p class="mt-2 text-sm text-slate-400" { 
-                    "Real-time metric streams processed directly out of GritShield asynchronous Tokio pipeline contexts." 
+           // Header panel card
+            div class="flex items-center justify-between border-b border-slate-800 pb-5" {
+                div {
+                    h1 class="text-3xl font-bold tracking-tight text-slate-100" { "Kernel Engine Telemetry" }
+                    p class="mt-2 text-sm text-slate-400" { 
+                        "Real-time metric streams processed directly out of GritShield asynchronous Tokio pipeline contexts." 
+                    }
+                }
+                // Visual badge rendering current role clearance level
+                div class="text-right" {
+                    span class="text-xs text-slate-500 block uppercase tracking-wider font-semibold" { "Security Context" }
+                    span class="inline-flex items-center mt-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" {
+                        (current_role)
+                    }
                 }
             }
 
@@ -70,6 +84,34 @@ pub async fn handler(ctx: RequestContext) -> Response {
                         span class="text-xs text-slate-500" { "buckets exhausted" }
                     }
                     div class="absolute bottom-0 left-0 right-0 h-[2px] bg-amber-500" {}
+                }
+            }
+
+            // Conditional Administrative Operator Deck
+            div class="p-6 rounded-xl border border-slate-800 bg-slate-900/40 space-y-4" {
+                h2 class="text-xl font-bold text-slate-200" { "Core Management Node Controls" }
+                
+                @if ctx.has_role("Operator") {
+                    p class="text-sm text-slate-400" { 
+                        "Authorized operational actions available to your active command level profile." 
+                    }
+                    div class="flex flex-wrap gap-4 pt-2" {
+                        button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors" {
+                            "Flush Network Telemetry Counters"
+                        }
+                        // Only show destructive buttons if they have elite SuperAdmin permissions!
+                        @if ctx.has_role("SuperAdmin") {
+                            button class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-sm font-semibold rounded-lg transition-colors" {
+                                "Emergency Infrastructure Shutdown"
+                            }
+                        }
+                    }
+                } @else {
+                    // Standard read-only Auditor fallback view layout state
+                    div class="p-4 bg-amber-500/5 border border-amber-500/10 rounded-lg flex items-center gap-3 text-amber-400/80 text-sm" {
+                        span class="text-base" { "⚠️" }
+                        p { "Your access role profile limits modification privileges." }
+                    }
                 }
             }
 
