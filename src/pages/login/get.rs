@@ -7,6 +7,12 @@ use maud::html;
 
 // Render Login Form (GET /login)
 pub async fn get_handler(ctx: RequestContext) -> Response {
+
+    if ctx.is_user_authenticated() {
+        // User is logged in, redirect them away from the login page
+        return Response::redirect(303, "/dashboard");
+    }
+
     let csrf_token = ctx.session.as_ref().and_then(|s| {
         s.lock().unwrap().data.get("csrf_token").cloned()
     }).unwrap_or_default();

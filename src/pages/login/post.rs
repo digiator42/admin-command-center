@@ -59,8 +59,7 @@ pub async fn post_handler(ctx: RequestContext) -> Response {
             }
 
             // Direct clean browser redirect
-                        return Response::redirect(303, "/dashboard");
-
+            return Response::redirect(303, "/dashboard");
         }
     }
 

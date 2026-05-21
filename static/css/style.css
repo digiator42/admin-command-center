@@ -13,10 +13,5 @@ body {
     border-radius: 12px;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
 }
-nav {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 2rem;
-}
-a { color: #38bdf8; text-decoration: none; }
+
 footer { margin-top: 2rem; text-align: center; color: #64748b; font-size: 0.875rem; }

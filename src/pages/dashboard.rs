@@ -37,11 +37,21 @@ pub async fn handler(ctx: RequestContext) -> Response {
                         "Real-time metric streams processed directly out of GritShield asynchronous Tokio pipeline contexts." 
                     }
                 }
-                // Visual badge rendering current role clearance level
-                div class="text-right" {
-                    span class="text-xs text-slate-500 block uppercase tracking-wider font-semibold" { "Security Context" }
-                    span class="inline-flex items-center mt-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" {
-                        (current_role)
+                // Right side: badge + sign out button
+                div class="flex items-center gap-6" {
+                    div class="flex flex-col text-right" {
+                        span class="text-xs text-slate-500 uppercase tracking-wider font-semibold" {
+                            "Security Context"
+                        }
+                        span class="inline-flex items-center mt-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" {
+                            (current_role)
+                        }
+                    }
+
+                    form method="POST" action="/logout" class="inline-flex items-center justify-center px-3 py-1.5 border border-slate-700 hover:border-slate-600 hover:bg-slate-800/60 text-xs font-semibold text-slate-300 rounded-lg transition-colors" {
+                         button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors pt-3" {
+                        "Sign out"
+                    }
                     }
                 }
             }
