@@ -20,7 +20,7 @@ pub fn main_layout(title: &str, content: maud::Markup) -> maud::Markup {
                     (content)
                 }
                 footer {
-                    p class="text-3xl font-bold underline" {
+                    p class="text-xs font-bold underline" {
                         "Crafted safely with Gritshield Web Engine"
                     }
                 }

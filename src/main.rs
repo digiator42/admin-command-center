@@ -8,8 +8,6 @@ use crate::workers::monitor;
 
 mod pages {
     pub mod dashboard;
-    #[path = "docs/[..path].rs"]
-    pub mod docs_wildcard;
     mod login {
         pub mod get;
         pub mod post;
@@ -21,6 +19,7 @@ mod bootstrap;
 mod models;
 mod root;
 mod security;
+mod telemetry_ws;
 mod workers;
 
 #[get("/protected")]
@@ -59,6 +58,7 @@ async fn main() {
         "/logout".to_string(),
         "/register".to_string(),
         "/dashboard".to_string(),
+        "/api/live-telemetry".to_string(),
     ];
 
     let router = Router::new()
