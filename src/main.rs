@@ -8,11 +8,16 @@ use crate::workers::monitor;
 
 mod pages {
     pub mod dashboard;
-    mod login {
-        pub mod get;
-        pub mod post;
+    pub mod auth {
+        mod login {
+            pub mod index;
+            pub mod post;
+        }
+        mod register {
+            pub mod index;
+            pub mod post;
+        }
     }
-    pub mod register;
 }
 
 mod bootstrap;
@@ -21,17 +26,6 @@ mod root;
 mod security;
 mod telemetry_ws;
 mod workers;
-
-#[get("/protected")]
-async fn index(_ctx: RequestContext) -> Response {
-    render!(
-        "Welcome Home",
-        html! {
-            h1 { "ACC!" }
-            p { "The centralized orchestration engine, security gateway, and operational dashboard for gritshield infrastructure." }
-        }
-    )
-}
 
 #[get("/static/:*path")]
 async fn static_assets(ctx: RequestContext) -> Response {
@@ -53,10 +47,8 @@ async fn main() {
     });
 
     let public_paths = vec![
-        "/static/*".to_string(),
-        "/login/*".to_string(),
-        "/logout".to_string(),
-        "/register".to_string(),
+        "/static/**".to_string(),
+        "/auth/**".to_string(),
         "/dashboard".to_string(),
         "/api/live-telemetry".to_string(),
     ];
@@ -65,7 +57,7 @@ async fn main() {
         .add_middleware(LoggerMiddleware)
         .add_middleware(AuthMiddleware::new_session(
             public_paths,
-            Some("/login/get"),
+            Some("auth/login"),
         ))
         .mound_db(shared_db)
         .mount_file_routes("src/pages")

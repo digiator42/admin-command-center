@@ -1,10 +1,5 @@
 use bcrypt::{hash, DEFAULT_COST, BcryptError};
 
-
-pub fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
-    bcrypt::hash(password, 12)
-}
-
 pub fn verify_password(password: &str, hash: &str) -> bool {
     bcrypt::verify(password, hash).unwrap_or(false)
 }

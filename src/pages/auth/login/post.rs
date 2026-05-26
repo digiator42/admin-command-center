@@ -22,25 +22,22 @@ pub async fn post_handler(ctx: RequestContext) -> Response {
     let username = form_data
         .fields
         .get("username")
-        .map(|s| s.as_str())
+        .map(|s| s.as_str().trim())
         .unwrap_or("");
     let password = form_data
         .fields
         .get("password")
-        .map(|s| s.as_str())
+        .map(|s| s.as_str().trim())
         .unwrap_or("");
 
-    println!("==> {:?} {} {}", form_data, username, password);
-    println!("{:?}", generate_hash(password));
     // Look up user row matching input username
     if let Ok(Some(user)) = system_users::Entity::find()
         .filter(system_users::Column::Username.eq(username))
         .one(db.as_ref())
         .await
     {
-        println!("======= {:?}", user);
         // Crypto confirmation sequence matches hash validation
-        if verify_password(password, &user.password_hash) {
+        if verify_password(password.trim(), &user.password_hash.trim()) {
             // Update the session in memory. Since it's thread-safe and tracked by GritShield's
             // global SessionStore pool, this change is instantly live across all threads!
             if let Some(ref session_arc) = ctx.session {
@@ -64,9 +61,9 @@ pub async fn post_handler(ctx: RequestContext) -> Response {
     }
 
     // Edge-case identity authentication denial
-    Response::new(401, Sanitizer::trust(
-        "<h1>401 Unauthorized</h1><p>Invalid kernel operator credentials matching parameters.</p>".into()
-    ))
+    return Response::new(401, Sanitizer::trust(
+        "<h1>401 Unauthorized</h1><p>No user found with the provided credentials.</p>".into()
+    ));
 }
 
 register_page!(HttpMethod::POST, post_handler);

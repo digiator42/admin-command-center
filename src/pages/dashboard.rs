@@ -200,9 +200,9 @@ pub async fn handler(ctx: RequestContext) -> Response {
                 "#))
             }
         }
-    }.into_string();
+    };
 
-    render!(raw, "GritShield Control Panel Hub", panel_body)
+    render!(ctx, "GritShield Control Panel Hub", panel_body)
 }
 
 register_page!(HttpMethod::GET, handler);
