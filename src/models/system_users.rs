@@ -8,7 +8,7 @@ pub struct Model {
     #[sea_orm(unique)]
     pub username: String,
     pub password_hash: String,
-    pub role: String, // "SuperAdmin", "Operator", "Auditor"
+    pub role: String, // "Admin", "Operator", "Auditor"
     pub created_at: Option<DateTime>,
 }
 

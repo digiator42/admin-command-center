@@ -33,7 +33,7 @@ pub async fn get_handler(ctx: RequestContext) -> Response {
                         select name="role" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-slate-200 focus:outline-none focus:border-indigo-500" {
                             option value="Auditor" { "Auditor (Read-Only)" }
                             option value="Operator" { "Operator (Standard Command)" }
-                            option value="SuperAdmin" { "SuperAdmin" }
+                            option value="Admin" { "Admin" }
                         }
                     }
                     button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors pt-3" {

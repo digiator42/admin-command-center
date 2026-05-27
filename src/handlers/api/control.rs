@@ -24,11 +24,11 @@ pub async fn flush_counters_handler(ctx: RequestContext) -> Response {
     ]))
 }
 
-#[post("/api/admin/emergency-shutdown", role = "SuperAdmin")]
+#[post("/api/admin/emergency-shutdown", role = "Admin")]
 /// Execute a graceful cascading process termination hook across the cluster
 pub async fn emergency_shutdown_handler(_: RequestContext) -> Response {
 
-    println!("[SYSTEM CRITICAL] EMERGENCY SHUTDOWN COMMAND ISSUED BY SUPERADMIN.");
+    println!("[SYSTEM CRITICAL] EMERGENCY SHUTDOWN COMMAND ISSUED BY ADMIN.");
 
     // Spawn a delayed thread task so the HTTP response frame can ship successfully back to the client first
     tokio::spawn(async {

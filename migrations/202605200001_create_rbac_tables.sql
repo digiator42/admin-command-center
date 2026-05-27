@@ -4,9 +4,9 @@ CREATE TABLE IF NOT EXISTS system_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'Auditor', -- 'SuperAdmin', 'Operator', 'Auditor'
+    role VARCHAR(50) NOT NULL DEFAULT 'Auditor', -- 'Admin', 'Operator', 'Auditor'
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_role CHECK (role IN ('SuperAdmin', 'Operator', 'Auditor'))
+    CONSTRAINT chk_role CHECK (role IN ('Admin', 'Operator', 'Auditor'))
 );
 
 -- State-backed Session table for secure cookie token verification
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS user_sessions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed a default SuperAdmin account for testing setup (Password: admin123)
+-- Seed a default Admin account for testing setup (Password: admin123)
 INSERT INTO system_users (username, password_hash, role)
-VALUES ('admin', '$2b$12$K7v1bO8qWv3P5X2yKzZ1eOaL7M2mGvHn8JqK5rL4M3N2O1P0Q.RS.', 'SuperAdmin')
+VALUES ('admin', '$2b$12$K7v1bO8qWv3P5X2yKzZ1eOaL7M2mGvHn8JqK5rL4M3N2O1P0Q.RS.', 'Admin')
 ON CONFLICT DO NOTHING;

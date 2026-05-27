@@ -7,9 +7,7 @@ static MIGRATOR: Migrator = sqlx::migrate!("./migrations");
 pub async fn connect_and_migrate_db() -> DatabaseConnection {
     let url = get_env("PG_URL", "");
 
-    let sqlx_pool = sqlx::PgPool::connect(&url)
-        .await
-        .unwrap();
+    let sqlx_pool = sqlx::PgPool::connect(&url).await.unwrap();
 
     println!("[DB] Checking database migration schema integrity via embedded assets...");
 

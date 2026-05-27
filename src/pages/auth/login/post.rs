@@ -47,7 +47,7 @@ pub async fn post_handler(ctx: RequestContext) -> Response {
                     .insert("user_id".to_string(), user.id.to_string());
                 session
                     .data
-                    .insert("role".to_string(), user.role.to_string()); // "SuperAdmin"
+                    .insert("role".to_string(), user.role.to_string()); // "Admin"
 
                 println!(
                     "[SUCCESS] Session updated globally in store: {:?}",

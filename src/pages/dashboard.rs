@@ -98,7 +98,7 @@ pub async fn handler(ctx: RequestContext) -> Response {
                         button id="flush-counters-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                             "Flush Network Telemetry Counters"
                         }
-                        @if ctx.has_fixed_role("SuperAdmin") {
+                        @if ctx.has_fixed_role("Admin") {
                             button id="emergency-shutdown-btn" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                                 "Emergency Infrastructure Shutdown"
                             }
