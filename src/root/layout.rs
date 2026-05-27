@@ -1,8 +1,6 @@
 use gritshield::prelude::RequestContext;
 use maud::html;
 
-use crate::security::rbac::RbacExtensions;
-
 pub fn main_layout(title: &str, content: maud::Markup, ctx: &RequestContext) -> maud::Markup {
     // Check if user is authenticated by inspecting the context session
     let is_authenticated = ctx.is_user_authenticated();

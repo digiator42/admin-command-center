@@ -6,7 +6,6 @@ use sea_orm::EntityTrait;
 use std::sync::atomic::Ordering;
 
 use crate::models::monitored_services;
-use crate::security::rbac::RbacExtensions;
 
 pub async fn handler(ctx: RequestContext) -> Response {
     // Fetch our atomic numbers securely out of the thread pool context (Initial load states)
@@ -91,7 +90,7 @@ pub async fn handler(ctx: RequestContext) -> Response {
 
                 h2 class="text-xl font-bold text-slate-200" { "Core Management Node Controls" }
 
-                @if ctx.has_role("Operator") {
+                @if ctx.has_fixed_role("Operator") {
                     p class="text-sm text-slate-400" {
                         "Authorized operational actions available to your active command level profile."
                     }
@@ -99,7 +98,7 @@ pub async fn handler(ctx: RequestContext) -> Response {
                         button id="flush-counters-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                             "Flush Network Telemetry Counters"
                         }
-                        @if ctx.has_role("SuperAdmin") {
+                        @if ctx.has_fixed_role("SuperAdmin") {
                             button id="emergency-shutdown-btn" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                                 "Emergency Infrastructure Shutdown"
                             }

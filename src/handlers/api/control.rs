@@ -2,19 +2,11 @@ use gritshield::prelude::*;
 use std::collections::HashMap;
 use std::sync::atomic::Ordering;
 
-use crate::security::rbac::RbacExtensions;
+// use crate::security::rbac::RbacExtensions;
 
-#[post("/api/admin/flush-counters")]
+#[post("/api/admin/flush-counters", role = "Operator")]
 /// Flush the metrics collection atoms cleanly back to baseline states
 pub async fn flush_counters_handler(ctx: RequestContext) -> Response {
-    // Enforce explicit administrative authorization status
-    if !ctx.has_role("Operator") {
-        // Utilizes your brand new fluent response helpers with an inline HashMap
-        return Response::forbidden(&HashMap::from([(
-            "error",
-            "Access Denied: Insufficient operational clearance profile level.",
-        )]));
-    }
 
     // Reset runtime telemetry registers
     ctx.telemetry.active_connections.store(0, Ordering::SeqCst);
@@ -32,16 +24,9 @@ pub async fn flush_counters_handler(ctx: RequestContext) -> Response {
     ]))
 }
 
-#[post("/api/admin/emergency-shutdown")]
+#[post("/api/admin/emergency-shutdown", role = "SuperAdmin")]
 /// Execute a graceful cascading process termination hook across the cluster
-pub async fn emergency_shutdown_handler(ctx: RequestContext) -> Response {
-    // Only the absolute highest privilege tier can execute a shutdown
-    if !ctx.has_role("SuperAdmin") {
-        return Response::forbidden(&HashMap::from([(
-            "error",
-            "Access Denied: Requires SuperAdmin operational hierarchy status.",
-        )]));
-    }
+pub async fn emergency_shutdown_handler(_: RequestContext) -> Response {
 
     println!("[SYSTEM CRITICAL] EMERGENCY SHUTDOWN COMMAND ISSUED BY SUPERADMIN.");
 
