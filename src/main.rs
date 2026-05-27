@@ -19,6 +19,11 @@ mod pages {
         }
     }
 }
+pub mod handlers {
+    pub mod api {
+        pub mod control;
+    }
+}
 
 mod bootstrap;
 mod models;
@@ -57,7 +62,7 @@ async fn main() {
         .add_middleware(LoggerMiddleware)
         .add_middleware(AuthMiddleware::new_session(
             public_paths,
-            Some("auth/login"),
+            Some("/auth/login"),
         ))
         .mound_db(shared_db)
         .mount_file_routes("src/pages")

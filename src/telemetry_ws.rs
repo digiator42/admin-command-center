@@ -1,11 +1,14 @@
-use futures_util::sink::SinkExt; // Allows using .send() on streams
-use gritshield::routing::trie::RequestContext;
-use serde::Serialize;
+use futures_util::sink::SinkExt;
+use gritshield::{
+    deps::tokio_tungstenite::WebSocketStream,
+    deps::tokio_tungstenite::tungstenite::Message,
+    deps::tokio::net::TcpStream, 
+    deps::serde::Serialize,
+    routing::trie::RequestContext,
+};
+
 use std::sync::atomic::Ordering;
 use std::time::Duration;
-use tokio::net::TcpStream;
-use tokio_tungstenite::WebSocketStream;
-use tokio_tungstenite::tungstenite::Message;
 
 #[derive(Serialize)]
 struct LiveMetricsPayload {
@@ -35,10 +38,6 @@ pub async fn telemetry_stream_handler(
 
         // Serialize to standard JSON string format
         if let Ok(json_string) = serde_json::to_string(&metrics) {
-            // println!(
-            //     "[ACC TELEMETRY] Pushing payload frame down the wire: {}",
-            //     json_string
-            // );
             if ws_stream.send(Message::Text(json_string)).await.is_err() {
                 println!("[ACC TELEMETRY] Target pipeline connection dropped.");
                 break;

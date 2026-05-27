@@ -1,10 +1,9 @@
-
 use gritshield::prelude::*;
 use gritshield::protocol::request::HttpMethod;
-use gritshield::{register_page};
+use gritshield::register_page;
 use maud::{PreEscaped, html};
-use std::sync::atomic::Ordering;
 use sea_orm::EntityTrait;
+use std::sync::atomic::Ordering;
 
 use crate::models::monitored_services;
 use crate::security::rbac::RbacExtensions;
@@ -18,13 +17,15 @@ pub async fn handler(ctx: RequestContext) -> Response {
     // Fetch live running services tracking state out of database pool hook
     let mut services_list = Vec::new();
     if let Some(ref db_pool) = ctx.db {
-        if let Ok(records) = monitored_services::Entity::find().all(db_pool.as_ref()).await {
+        if let Ok(records) = monitored_services::Entity::find()
+            .all(db_pool.as_ref())
+            .await
+        {
             services_list = records;
         }
     }
 
-    // Capture user profile parameters smoothly from current context
-    let current_role = ctx.get_user_role().unwrap_or_else(|| "Guest".to_string());
+    let csrf_token = ctx.get_csrf_token();
 
     // Render the panel body using 100% type-safe Maud code with Tailwind utility styles!
     let panel_body = html! {
@@ -33,25 +34,8 @@ pub async fn handler(ctx: RequestContext) -> Response {
             div class="flex items-center justify-between border-b border-slate-800 pb-5" {
                 div {
                     h1 class="text-3xl font-bold tracking-tight text-slate-100" { "Kernel Engine Telemetry" }
-                    p class="mt-2 text-sm text-slate-400" { 
-                        "Real-time metric streams processed directly out of GritShield asynchronous Tokio pipeline contexts." 
-                    }
-                }
-                // Right side: badge + sign out button
-                div class="flex items-center gap-6" {
-                    div class="flex flex-col text-right" {
-                        span class="text-xs text-slate-500 uppercase tracking-wider font-semibold" {
-                            "Security Context"
-                        }
-                        span class="inline-flex items-center mt-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" {
-                            (current_role)
-                        }
-                    }
-
-                    form method="POST" action="/logout" class="inline-flex items-center justify-center px-3 py-1.5 border border-slate-700 hover:border-slate-600 hover:bg-slate-800/60 text-xs font-semibold text-slate-300 rounded-lg transition-colors" {
-                         button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors pt-3" {
-                            "Sign out"
-                        }
+                    p class="mt-2 text-sm text-slate-400" {
+                        "Real-time metric streams processed directly out of GritShield asynchronous Tokio pipeline contexts."
                     }
                 }
             }
@@ -100,20 +84,23 @@ pub async fn handler(ctx: RequestContext) -> Response {
                 }
             }
 
-            // Conditional Administrative Operator Deck
+           // Conditional Administrative Operator Deck
             div class="p-6 rounded-xl border border-slate-800 bg-slate-900/40 space-y-4" {
+                // EMBED THE TOKEN SECURELY IN THE DOM FOR CLIENT EXTRAPOLATION
+                input type="hidden" id="global-csrf-token" value=(csrf_token);
+
                 h2 class="text-xl font-bold text-slate-200" { "Core Management Node Controls" }
-                
+
                 @if ctx.has_role("Operator") {
-                    p class="text-sm text-slate-400" { 
-                        "Authorized operational actions available to your active command level profile." 
+                    p class="text-sm text-slate-400" {
+                        "Authorized operational actions available to your active command level profile."
                     }
                     div class="flex flex-wrap gap-4 pt-2" {
-                        button class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors" {
+                        button id="flush-counters-btn" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                             "Flush Network Telemetry Counters"
                         }
                         @if ctx.has_role("SuperAdmin") {
-                            button class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-sm font-semibold rounded-lg transition-colors" {
+                            button id="emergency-shutdown-btn" class="px-4 py-2 bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50" {
                                 "Emergency Infrastructure Shutdown"
                             }
                         }
@@ -138,7 +125,7 @@ pub async fn handler(ctx: RequestContext) -> Response {
                         h3 class="text-lg font-bold text-slate-100" { (service.name) }
                         p class="text-xs text-slate-400 font-mono" { (service.target_url) }
                     }
-                    
+
                     span class={
                         "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2 "
                         (if service.current_status == "UP" { "bg-green-500/10 text-green-400" }
@@ -197,6 +184,72 @@ pub async fn handler(ctx: RequestContext) -> Response {
                     
                     // Boot the connection instantly
                     connectTelemetry();
+
+                    // CORE CONTROL NODE FUNCTIONALITIES
+                    document.addEventListener("DOMContentLoaded", function() {
+                    const flushBtn = document.getElementById("flush-counters-btn");
+                    const shutdownBtn = document.getElementById("emergency-shutdown-btn");
+                    
+                    // READ THE SECURE SERVER TOKEN OUT OF THE HIDDEN INPUT ELEMENT
+                    const csrfToken = document.getElementById("global-csrf-token")?.value;
+
+                    if (flushBtn) {
+                        flushBtn.addEventListener("click", async function() {
+                            if(!confirm("Are you sure you want to clear all active network counters?")) return;
+                            
+                            flushBtn.disabled = true;
+                            try {
+                                const res = await fetch("/api/admin/flush-counters", { 
+                                    method: "POST",
+                                    headers: {
+                                        // ATTACH THE CRYPTOGRAPHIC PASS FRAMEWAY FOR VALIDATION HIERARCHIES
+                                        "X-CSRF-Token": csrfToken,
+                                        "Content-Type": "application/json"
+                                    }
+                                });
+                                const data = await res.json();
+                                if (res.ok) {
+                                    alert(data.message || "Counters flushed successfully.");
+                                } else {
+                                    alert("Error: " + (data.error || "Execution failed."));
+                                }
+                            } catch (err) {
+                                alert("Network submission failure tracing connection.");
+                            } finally {
+                                flushBtn.disabled = false;
+                            }
+                        });
+                    }
+
+                    if (shutdownBtn) {
+                        shutdownBtn.addEventListener("click", async function() {
+                            if(!confirm("CRITICAL WARNING:\n\nThis will instantly terminate the engine kernel clusters. Proceed?")) return;
+                            
+                            shutdownBtn.disabled = true;
+                            try {
+                                const res = await fetch("/api/admin/emergency-shutdown", { 
+                                    method: "POST",
+                                    headers: {
+                                        // ATTACH THE CRYPTOGRAPHIC PASS FRAMEWAY HERE TOO
+                                        "X-CSRF-Token": csrfToken,
+                                        "Content-Type": "application/json"
+                                    }
+                                });
+                                if (res.ok) {
+                                    alert("Shutdown signal sent. Server context offline.");
+                                    window.location.reload();
+                                } else {
+                                    const data = await res.json();
+                                    alert("Shutdown rejected: " + (data.error || "Forbidden"));
+                                }
+                            } catch (err) {
+                                alert("Connection lost. Kernel cluster down.");
+                            } finally {
+                                shutdownBtn.disabled = false;
+                            }
+                        });
+                    }
+                });
                 "#))
             }
         }
