@@ -10,6 +10,8 @@ pub async fn get_handler(ctx: RequestContext) -> Response {
         return Response::redirect(303, "/dashboard");
     }
 
+    let error = ctx.get_query_param_decoded("error");
+
     let csrf_token = ctx.get_session_data("csrf_token");
     println!("[GET /login] CSRF Token for form: {:?}", csrf_token);
 
@@ -32,6 +34,11 @@ pub async fn get_handler(ctx: RequestContext) -> Response {
                     }
                     button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors pt-3" {
                         "Establish Command Session"
+                    }
+                }
+                @if let Some(error) = error {
+                    div class="alert-box error text-center text-red-500 text-sm mt-4" {
+                        p { (Sanitizer::trust(&error)) }
                     }
                 }
             }

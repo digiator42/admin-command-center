@@ -60,10 +60,11 @@ pub async fn post_handler(ctx: RequestContext) -> Response {
         }
     }
 
-    // Edge-case identity authentication denial
-    return Response::new(401, Sanitizer::trust(
-        "<h1>401 Unauthorized</h1><p>No user found with the provided credentials.</p>".into()
-    ));
+    // Identity authentication denial
+    return Response::redirect(
+        303,
+        "/auth/login?error=Unauthorized",
+    );
 }
 
 register_page!(HttpMethod::POST, post_handler);
