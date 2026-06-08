@@ -5,7 +5,6 @@ use maud::html;
 
 // Render the HTML form (GET /register)
 pub async fn get_handler(ctx: RequestContext) -> Response {
-
     if ctx.is_user_authenticated() {
         // User is logged in, redirect them away from the login page
         return Response::redirect(303, "/dashboard");
@@ -18,7 +17,7 @@ pub async fn get_handler(ctx: RequestContext) -> Response {
                     h1 class="text-2xl font-bold text-slate-100" { "Create ACC Node Identity" }
                     p class="text-sm text-slate-400 mt-1" { "Provision a new operator profile inside the control plane." }
                 }
-                
+
                 form method="POST" action="/auth/register/post" class="space-y-4" {
                     div {
                         label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2" { "Username" }

@@ -19,7 +19,7 @@ pub async fn start_service_monitor_loop(db: Arc<DatabaseConnection>) {
                 let response = client.get(&service.target_url).send().await;
                 let latency = start_time.elapsed().as_millis() as i32;
 
-                // Evaluate the result status
+                // Evaluate the result statuscsrf_token
                 let (status_str, status_code, err_msg) = match response {
                     Ok(res) => {
                         let code = res.status().as_u16();

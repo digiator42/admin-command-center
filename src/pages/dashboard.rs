@@ -213,7 +213,7 @@ pub async fn handler(ctx: RequestContext) -> Response {
                                     alert("Error: " + (data.error || "Execution failed."));
                                 }
                             } catch (err) {
-                                alert("Network submission failure tracing connection.");
+                                alert("Network submission failure");
                             } finally {
                                 flushBtn.disabled = false;
                             }
