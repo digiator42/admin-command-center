@@ -69,5 +69,5 @@ async fn main() {
         .expect("Failed to map file paths tree");
 
     println!("[GRITSHIELD] Booting engine cluster...");
-    run_server("127.0.0.1", "8000", router, true).await;
+    run_server("127.0.0.1", "8000", router).await;
 }
