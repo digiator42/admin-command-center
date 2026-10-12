@@ -68,6 +68,9 @@ async fn main() {
         .mount_file_routes("src/pages")
         .expect("Failed to map file paths tree");
 
-    println!("[GRITSHIELD] Booting engine cluster...");
-    run_server("127.0.0.1", "8000", router).await;
+    let host = std::env::var("ACC_BIND").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let port = std::env::var("ACC_PORT").unwrap_or_else(|_| "8000".to_string());
+
+    println!("[GRITSHIELD] Booting engine cluster on {host}:{port}...");
+    run_server(&host, &port, router, false).await;
 }

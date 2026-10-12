@@ -74,7 +74,7 @@ async fn log_heartbeat(
 
     // Save the log record to the database
     if let Err(err) = heartbeat_record.insert(db).await {
-        error!(
+        eprintln!(
             "[MONITOR ERROR] Failed to write heartbeat ledger log: {}",
             err
         );
@@ -89,10 +89,10 @@ async fn log_heartbeat(
         active_service.current_status = Set(status_str.to_string());
 
         if let Err(err) = active_service.update(db).await {
-            error!(
-                "[MONITOR ERROR] Failed to update service status cache: {}",
-                err
-            );
+        eprintln!(
+            "[MONITOR ERROR] Failed to update service status cache: {}",
+            err
+        );
         }
     }
 }
