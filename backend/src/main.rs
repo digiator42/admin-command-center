@@ -31,7 +31,7 @@ fn connector(name: &str, url_env: &str, url_default: &str, key_env: &str) -> Con
 
 #[tokio::main]
 async fn main() {
-    let shared_db = Arc::new(bootstrap::connect_and_migrate_db().await);
+    let shared_db = bootstrap::connect_and_migrate_db().await;
 
     let monitor_db = shared_db.clone();
     tokio::spawn(async move {
