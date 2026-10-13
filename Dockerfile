@@ -1,8 +1,8 @@
 # Admin Command Center image: GritShield (crates.io) + PostgreSQL.
 #
-# The service binds from ACC_BIND/ACC_PORT (see src/main.rs) and serves
-# file-based routes scanned from ./src/pages plus ./static. Migrations are
-# embedded at compile time via sqlx::migrate!.
+# The service binds from ACC_BIND/ACC_PORT (see src/main.rs) and serves the
+# JSON REST API described in api.md. Migrations are embedded at compile time
+# via sqlx::migrate!.
 #
 # Build context is this repo (no sibling path deps needed):
 #   docker build -t acc .
@@ -29,5 +29,5 @@ ENV ACC_BIND=0.0.0.0 \
     ACC_PORT=8000
 EXPOSE 8000
 HEALTHCHECK --interval=10s --timeout=3s --retries=5 \
-    CMD curl -fsS http://127.0.0.1:8000/auth/login >/dev/null || exit 1
+    CMD curl -fsS http://127.0.0.1:8000/health >/dev/null || exit 1
 CMD ["admin-command-center"]

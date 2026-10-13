@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-gritshield = "0.1.0"
+gritshield = { version = "0.3.1", features = ["postgres", "mcp"] }
 tokio = { version = "1.0", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -12,10 +12,10 @@ maud = "0.25"
 sea-orm = { version = "1.1.20", default-features = false, features = ["macros", "sqlx-postgres", "runtime-tokio-native-tls", "with-chrono"] }
 sqlx = { version = "0.8.5", default-features = false, features = ["postgres", "runtime-tokio-native-tls", "migrate", "macros"] }
 ctor = "1.0"
-bootstrap = "1.0.2"
 reqwest = { version = "0.12", features = ["json", "blocking", "rustls-tls"] }
 bcrypt = "0.19.1"
 colored = "2.1"
 chrono = { version = "0.4", features = ["serde"] }
 pulldown-cmark = "0.10"
 futures-util = "0.3"
+async-trait = "0.1"

@@ -1,4 +1,4 @@
-use bcrypt::{hash, DEFAULT_COST, BcryptError};
+use bcrypt::{hash, BcryptError};
 
 pub fn verify_password(password: &str, hash: &str) -> bool {
     bcrypt::verify(password, hash).unwrap_or(false)

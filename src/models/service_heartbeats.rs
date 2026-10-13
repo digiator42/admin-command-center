@@ -1,6 +1,8 @@
+use serde::Serialize;
+
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize)]
 #[sea_orm(table_name = "service_heartbeats")]
 pub struct Model {
     #[sea_orm(primary_key)]
