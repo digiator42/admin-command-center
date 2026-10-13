@@ -111,7 +111,7 @@ struct MeReply {
 
 #[allow(dead_code)]
 pub async fn me(token: &str) -> Result<User, ApiError> {
-    let reply: MeReply = veloasm::fetch_json(&authed(ME_PATH, token).url()).await?;
+    let reply: MeReply = authed(ME_PATH, token).send_json().await?;
     Ok(reply.user)
 }
 
@@ -126,7 +126,7 @@ struct ServicesReply {
 }
 
 pub async fn list_services(token: &str) -> Result<Vec<crate::state::MonitoredService>, ApiError> {
-    let reply: ServicesReply = veloasm::fetch_json(&authed(SERVICES_PATH, token).url()).await?;
+    let reply: ServicesReply = authed(SERVICES_PATH, token).send_json().await?;
     Ok(reply.services)
 }
 
@@ -138,21 +138,21 @@ struct MessageReply {
 
 /// Operator+: reset telemetry counters.
 pub async fn flush_counters(token: &str) -> Result<String, ApiError> {
-    let reply: MessageReply = veloasm::post_json(
-        &authed(FLUSH_PATH, token).url(),
-        &serde_json::json!({}),
-    )
-    .await?;
+    let reply: MessageReply = authed(FLUSH_PATH, token)
+        .method("POST")
+        .json_body(&serde_json::json!({}))?
+        .send_json()
+        .await?;
     Ok(reply.message)
 }
 
 /// Admin: terminate the engine kernel.
 pub async fn emergency_shutdown(token: &str) -> Result<String, ApiError> {
-    let reply: MessageReply = veloasm::post_json(
-        &authed(SHUTDOWN_PATH, token).url(),
-        &serde_json::json!({}),
-    )
-    .await?;
+    let reply: MessageReply = authed(SHUTDOWN_PATH, token)
+        .method("POST")
+        .json_body(&serde_json::json!({}))?
+        .send_json()
+        .await?;
     Ok(reply.message)
 }
 
