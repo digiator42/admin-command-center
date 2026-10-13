@@ -15,6 +15,22 @@ pub fn MetricsTiles() -> DomNode {
     let latency = memo!(move || format!("{} ms", t.get().cpu_worker_latency_ms));
     let memory = memo!(move || human_bytes(t.get().memory_usage_bytes));
 
+    let sys = app.system;
+    let services_up = memo!(move || {
+        let m = sys.get();
+        format!("{}/{}", m.services_up, m.services_total)
+    });
+    let uptime = memo!(move || {
+        let s = sys.get().uptime_seconds;
+        if s >= 3600 {
+            format!("{:.1} h", s as f64 / 3600.0)
+        } else if s >= 60 {
+            format!("{:.0} min", s as f64 / 60.0)
+        } else {
+            format!("{s} s")
+        }
+    });
+
     view! {
         <div>
             <h1 class="text-3xl font-bold tracking-tight text-slate-100">"Kernel Engine Telemetry"</h1>
@@ -79,6 +95,30 @@ pub fn MetricsTiles() -> DomNode {
                         <span class="text-xs text-slate-500">"resident"</span>
                     </div>
                     <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-violet-500"></div>
+                </div>
+
+                <div class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-slate-400">"Services Up"</span>
+                        <span class="bg-indigo-400/10 text-indigo-400 px-2 py-1 text-xs font-medium rounded-md">"Probed"</span>
+                    </div>
+                    <div class="mt-4 flex items-baseline gap-2">
+                        <span class="text-4xl font-extrabold font-mono text-slate-100">{ services_up }</span>
+                        <span class="text-xs text-slate-500">"passing probes"</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-indigo-500"></div>
+                </div>
+
+                <div class="relative overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50 p-6">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-slate-400">"Backend Uptime"</span>
+                        <span class="bg-slate-400/10 text-slate-400 px-2 py-1 text-xs font-medium rounded-md">"REST"</span>
+                    </div>
+                    <div class="mt-4 flex items-baseline gap-2">
+                        <span class="text-4xl font-extrabold font-mono text-slate-100">{ uptime }</span>
+                        <span class="text-xs text-slate-500">"since boot"</span>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-500"></div>
                 </div>
             </div>
         </div>

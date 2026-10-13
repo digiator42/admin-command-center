@@ -43,6 +43,11 @@ pub fn run_app() {
                                 <MetricsTiles />
                                 <ControlDeck />
                                 <ServicesTable />
+                                <div class="grid gap-4 lg:grid-cols-2">
+                                    <IntegrationsPanel />
+                                    <UsersPanel />
+                                </div>
+                                <DocsPanel />
                                 <div class="font-mono text-xs text-rose-400">{ api_error }</div>
                             </main>
                             <ToastStack />

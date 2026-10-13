@@ -149,3 +149,37 @@ pub fn start_services_poll(app: &AppState) {
     });
     std::mem::forget(_interval);
 }
+
+/// Pull aggregate system counters + backend version (slow poll).
+pub fn start_system_poll(app: &AppState) {
+    refresh_system(app);
+    let app = app.clone();
+    let _interval =
+        gloo_timers::callback::Interval::new(30_000, move || refresh_system(&app));
+    std::mem::forget(_interval);
+}
+
+fn refresh_system(app: &AppState) {
+    let Some(token) = app.auth.get().map(|a| a.token) else {
+        return;
+    };
+    let app = app.clone();
+    wasm_bindgen_futures::spawn_local(async move {
+        match api::system_metrics(&token).await {
+            Ok(m) => {
+                app.system.set(m);
+            }
+            Err(e) => {
+                if e.is_unauthorized() {
+                    app.auth.set(None);
+                }
+            }
+        }
+        match api::system_info(&token).await {
+            Ok(info) => {
+                app.backend_version.set(info.version);
+            }
+            Err(_) => {}
+        }
+    });
+}

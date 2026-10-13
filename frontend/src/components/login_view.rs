@@ -50,6 +50,7 @@ pub fn LoginView() -> DomNode {
                         app.auth_error.set(String::new());
                         crate::net::connect(&app);
                         crate::net::start_services_poll(&app);
+                        crate::net::start_system_poll(&app);
                     }
                     Err(e) => {
                         app.auth_error.set(e.to_string());

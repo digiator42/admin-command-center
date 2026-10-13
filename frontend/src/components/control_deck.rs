@@ -68,6 +68,7 @@ pub fn ControlDeck() -> DomNode {
                     view! {
                         <div>
                             <p class="text-sm text-slate-400">"Authorized operational actions available to your command level."</p>
+                            <FirewallForm />
                             <div class="flex flex-wrap gap-4 pt-2">
                                 <button
                                     class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-sm font-semibold rounded-lg transition-colors"
@@ -99,6 +100,106 @@ pub fn ControlDeck() -> DomNode {
                 }
             }
             <ConfirmModal pending={ pending } busy={ busy } />
+        </div>
+    }
+}
+
+/// LuxShield firewall proxy: block / unblock an IP through ACC.
+#[component]
+pub fn FirewallForm() -> DomNode {
+    let app = use_context::<AppState>().expect("AppState must be provided before mounting");
+
+    let ip_input = signal!(String::new());
+    let reason_input = signal!(String::new());
+    let form_error = signal!(String::new());
+    let form_ok = signal!(String::new());
+
+    // One state clone per button; signals are `Copy` and move freely.
+    let app_block = app.clone();
+    let app_unblock = app.clone();
+
+    view! {
+        <div class="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+            <div class="text-[11px] font-bold tracking-[2px] text-slate-500">"LUXSHIELD FIREWALL PROXY"</div>
+            <div class="flex gap-2">
+                <input
+                    type="text"
+                    class="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
+                    placeholder="203.0.113.66"
+                    bind:value={ ip_input }
+                />
+                <input
+                    type="text"
+                    class="flex-[2] min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+                    placeholder="reason…"
+                    bind:value={ reason_input }
+                />
+            </div>
+            <div class="flex gap-2">
+                <button
+                    class="bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 text-rose-300 text-xs font-semibold px-3 py-1.5 rounded-lg"
+                    on:click={ move |_| {
+                        let app = app_block.clone();
+                        let ip = ip_input.get().trim().to_string();
+                        let reason = reason_input.get().trim().to_string();
+                        if ip.is_empty() {
+                            form_error.set("IP is required".to_string());
+                            return;
+                        }
+                        form_error.set(String::new());
+                        form_ok.set(String::new());
+                        wasm_bindgen_futures::spawn_local(async move {
+                            let Some(token) = app.auth.get().map(|a| a.token) else { return; };
+                            match crate::api::block_ip(&token, &ip, &reason).await {
+                                Ok(()) => {
+                                    app.api_error.set(String::new());
+                                    form_ok.set(format!("{ip} blocked"));
+                                }
+                                Err(e) => {
+                                    if e.is_unauthorized() {
+                                        app.auth.set(None);
+                                    } else {
+                                        form_error.set(e.to_string());
+                                    }
+                                }
+                            }
+                        });
+                    } }>
+                    "Block IP"
+                </button>
+                <button
+                    class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-300 hover:border-indigo-500"
+                    on:click={ move |_| {
+                        let app = app_unblock.clone();
+                        let ip = ip_input.get().trim().to_string();
+                        if ip.is_empty() {
+                            form_error.set("IP is required".to_string());
+                            return;
+                        }
+                        form_error.set(String::new());
+                        form_ok.set(String::new());
+                        wasm_bindgen_futures::spawn_local(async move {
+                            let Some(token) = app.auth.get().map(|a| a.token) else { return; };
+                            match crate::api::unblock_ip(&token, &ip).await {
+                                Ok(()) => {
+                                    app.api_error.set(String::new());
+                                    form_ok.set(format!("{ip} unblocked"));
+                                }
+                                Err(e) => {
+                                    if e.is_unauthorized() {
+                                        app.auth.set(None);
+                                    } else {
+                                        form_error.set(e.to_string());
+                                    }
+                                }
+                            }
+                        });
+                    } }>
+                    "Unblock IP"
+                </button>
+                <span class="text-[11px] font-mono text-emerald-400 self-center">{ form_ok }</span>
+                <span class="text-[11px] font-mono text-rose-400 self-center">{ form_error }</span>
+            </div>
         </div>
     }
 }

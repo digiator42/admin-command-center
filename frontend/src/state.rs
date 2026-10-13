@@ -145,10 +145,18 @@ pub struct AppState {
 
     pub telemetry: RwSignal<Telemetry>,
     pub services: SignalVec<MonitoredService>,
+    pub integrations: SignalVec<crate::api::ConnectorInfo>,
+    pub users: SignalVec<crate::api::ManagedUser>,
+    pub docs: SignalVec<crate::api::DocMeta>,
+    /// Slug of the doc open in the reader (`None` = closed).
+    pub open_doc: RwSignal<Option<String>>,
+    pub doc_body: RwSignal<String>,
     pub toasts: SignalVec<Toast>,
 
     pub conn: RwSignal<ConnStatus>,
     pub api_error: RwSignal<String>,
+    pub backend_version: RwSignal<String>,
+    pub system: RwSignal<crate::api::SystemMetrics>,
 
     pub metrics: Metrics,
 }
@@ -165,9 +173,16 @@ impl AppState {
             auth_error: signal!(String::new()),
             telemetry: signal!(Telemetry::default()),
             services: signal_vec(Vec::new()),
+            integrations: signal_vec(Vec::new()),
+            users: signal_vec(Vec::new()),
+            docs: signal_vec(Vec::new()),
+            open_doc: signal!(None),
+            doc_body: signal!(String::new()),
             toasts: signal_vec(Vec::new()),
             conn: signal!(ConnStatus::Connecting),
             api_error: signal!(String::new()),
+            backend_version: signal!(String::new()),
+            system: signal!(crate::api::SystemMetrics::default()),
             metrics: Metrics {
                 next_id: Rc::new(Cell::new(1)),
             },

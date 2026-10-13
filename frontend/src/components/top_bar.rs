@@ -23,11 +23,13 @@ pub fn TopBar() -> DomNode {
             .map(|a| a.user.username.clone())
             .unwrap_or_default()
     });
+    let version = app.backend_version;
 
     view! {
         <header>
             <nav class="flex items-center justify-between p-4 bg-slate-900 text-white font-bold tracking-wide uppercase">
                 <div class="text-lg">"⬢ ACC"</div>
+                <span class="font-mono text-[11px] text-slate-500 normal-case tracking-normal">{ version }</span>
                 <div class="flex items-center gap-4">
                     <span class="font-mono text-xs text-slate-400 normal-case tracking-normal">{ name }</span>
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
@@ -39,9 +41,18 @@ pub fn TopBar() -> DomNode {
                     </span>
                     <button
                         class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold tracking-wide py-1.5 px-3 rounded-lg transition-colors"
-                        on:click={ move |_| {
-                            crate::net::disconnect();
-                            app.auth.set(None);
+                        on:click={ {
+                            let auth = app.auth;
+                            move |_| {
+                                let token = auth.get().map(|a| a.token);
+                                wasm_bindgen_futures::spawn_local(async move {
+                                    if let Some(token) = token {
+                                        crate::api::logout(&token).await;
+                                    }
+                                    crate::net::disconnect();
+                                    auth.set(None);
+                                });
+                            }
                         } }>
                         "Sign out"
                     </button>
