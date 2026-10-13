@@ -35,7 +35,9 @@ pub fn LoginView() -> DomNode {
             wasm_bindgen_futures::spawn_local(async move {
                 match crate::api::login(&u, &p).await {
                     Ok(reply) => {
-                        let expires_at_ms = if reply.expires_in > 0 {
+                        let expires_at_ms = if reply.expires_at > 0 {
+                            reply.expires_at * 1000
+                        } else if reply.expires_in > 0 {
                             js_sys::Date::now() as i64 + reply.expires_in * 1000
                         } else {
                             0

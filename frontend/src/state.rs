@@ -42,7 +42,9 @@ impl User {
 pub struct Auth {
     pub token: String,
     pub user: User,
-    /// Epoch millis when the token expires (0 = unknown, no pro-active refresh).
+    /// Epoch millis when the token expires (0 = unknown). Kept for contract
+    /// fidelity with the login reply; no pro-active refresh yet.
+    #[allow(dead_code)]
     pub expires_at_ms: i64,
 }
 
@@ -178,6 +180,7 @@ impl AppState {
         id
     }
 
+    #[allow(dead_code)]
     pub fn bearer(&self) -> Option<String> {
         self.auth.get().map(|a| format!("Bearer {}", a.token))
     }

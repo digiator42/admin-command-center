@@ -1,32 +1,16 @@
-//! ACC backend API contract.
+//! ACC backend API contract (see `api.md`).
 //!
-//! # PENDING BACKEND (api.md not yet delivered)
-//!
-//! The auth endpoints below are **assumed** from the agreed direction (JSON
-//! login, JWT-ready). Reconcile on arrival of `api.md`; only this file should
-//! need touching:
-//!
-//! - `POST /api/auth/login` `{username, password}` → `200`
-//!   `{token, token_type: "Bearer", expires_in, user: {id, username, role}}`,
-//!   `401 {error: "invalid_credentials"}`.
-//! - `POST /api/auth/refresh` (httpOnly refresh cookie, `credentials:
-//!   include`) → same shape as login. Best-effort: absent endpoint just
-//!   means sessions last until access-token expiry, then re-login.
-//! - `GET /api/auth/me` (`Authorization: Bearer`) → `{id, username, role}`.
-//! - `GET /api/services` (`Authorization: Bearer`) → `{services:
-//!   [{id, name, target_url, expected_status, ping_interval_seconds,
-//!   current_status, updated_at}]}`. The dashboard currently server-renders
-//!   this table; the SPA needs it as JSON.
-//! - Telemetry socket accepts `?token=<access-token>` (browsers cannot set
-//!   headers on `new WebSocket()`), same JSON frames as today.
-//! - Control `POST`s accept `Authorization: Bearer` instead of
-//!   `X-CSRF-Token`. Bearer auth is not ambient (unlike cookies), so CSRF
-//!   does not apply to these calls.
-//!
-//! Already shipped backend (verified in source):
-//! - `GET /api/live-telemetry` — WS, 1/sec frames.
-//! - `POST /api/admin/flush-counters` (Operator), `POST
-//!   /api/admin/emergency-shutdown` (Admin) — JSON `{status, message}`.
+//! - `POST /api/v1/auth/login` `{username, password}` → `200`
+//!   `{token, token_type, expires_in, expires_at, user}`, `401
+//!   {error: "invalid_credentials"}`. JWT HS256, 12 h. No refresh endpoint:
+//!   on 401, log in again.
+//! - `GET /api/v1/auth/me` → `{user, claims}`.
+//! - `GET /api/v1/services` → `{count, services: [...]}`.
+//! - Telemetry WS `/api/live-telemetry` is **public** (no token needed).
+//! - Control `POST /api/v1/control/flush-counters` (Operator+) and
+//!   `/api/v1/control/emergency-shutdown` (Admin) take `Authorization:
+//!   Bearer`. Bearer auth is not ambient (unlike cookies), so CSRF does not
+//!   apply to these calls.
 
 use serde::Deserialize;
 
@@ -35,13 +19,14 @@ use crate::state::User;
 /// Backend base URL (dev). Empty means same-origin.
 pub const BASE_URL: &str = "http://127.0.0.1:8000";
 
-pub const LOGIN_PATH: &str = "/api/auth/login";
-pub const REFRESH_PATH: &str = "/api/auth/refresh";
-pub const ME_PATH: &str = "/api/auth/me";
-pub const SERVICES_PATH: &str = "/api/services";
+pub const LOGIN_PATH: &str = "/api/v1/auth/login";
+/// Boot-time token validation (wired when the app needs it).
+#[allow(dead_code)]
+pub const ME_PATH: &str = "/api/v1/auth/me";
+pub const SERVICES_PATH: &str = "/api/v1/services";
 pub const TELEMETRY_PATH: &str = "/api/live-telemetry";
-pub const FLUSH_PATH: &str = "/api/admin/flush-counters";
-pub const SHUTDOWN_PATH: &str = "/api/admin/emergency-shutdown";
+pub const FLUSH_PATH: &str = "/api/v1/control/flush-counters";
+pub const SHUTDOWN_PATH: &str = "/api/v1/control/emergency-shutdown";
 
 fn with_base(path: &str) -> String {
     if BASE_URL.is_empty() {
@@ -104,6 +89,9 @@ pub struct LoginReply {
     pub token: String,
     #[serde(default)]
     pub expires_in: i64,
+    /// Unix seconds (preferred over `expires_in` for expiry math).
+    #[serde(default)]
+    pub expires_at: i64,
     #[serde(default)]
     pub user: User,
 }
@@ -115,66 +103,16 @@ pub async fn login(username: &str, password: &str) -> Result<LoginReply, ApiErro
     Ok(veloasm::post_json(&with_base(LOGIN_PATH), &body).await?)
 }
 
-/// Silent refresh via the httpOnly cookie. Best-effort: any failure just
-/// means "log in again".
-pub async fn refresh() -> Result<LoginReply, ApiError> {
-    use wasm_bindgen::JsCast;
-    use wasm_bindgen_futures::JsFuture;
-
-    let init = web_sys::RequestInit::new();
-    init.set_method("POST");
-    init.set_credentials(web_sys::RequestCredentials::Include);
-    let request = web_sys::Request::new_with_str_and_init(&with_base(REFRESH_PATH), &init)
-        .map_err(|_| ApiError {
-            status: 0,
-            message: "bad refresh request".to_string(),
-        })?;
-    let window = web_sys::window().ok_or(ApiError {
-        status: 0,
-        message: "no window object".to_string(),
-    })?;
-    let response = JsFuture::from(window.fetch_with_request(&request))
-        .await
-        .map_err(|e| ApiError {
-            status: 0,
-            message: e.as_string().unwrap_or_else(|| "refresh failed".to_string()),
-        })?;
-    let response: web_sys::Response = response.dyn_into().map_err(|_| ApiError {
-        status: 0,
-        message: "refresh resolved to a non-Response".to_string(),
-    })?;
-    if !response.ok() {
-        return Err(ApiError {
-            status: response.status(),
-            message: "session expired".to_string(),
-        });
-    }
-    let json = JsFuture::from(response.json().map_err(|_| ApiError {
-        status: 0,
-        message: "bad refresh payload".to_string(),
-    })?)
-    .await
-    .map_err(|_| ApiError {
-        status: 0,
-        message: "bad refresh payload".to_string(),
-    })?;
-    serde_json::from_str(
-        &js_sys::JSON::stringify(&json)
-            .map_err(|_| ApiError {
-                status: 0,
-                message: "bad refresh payload".to_string(),
-            })?
-            .as_string()
-            .unwrap_or_default(),
-    )
-    .map_err(|e| ApiError {
-        status: 0,
-        message: e.to_string(),
-    })
+#[derive(Debug, Deserialize)]
+#[allow(dead_code)]
+struct MeReply {
+    user: User,
 }
 
+#[allow(dead_code)]
 pub async fn me(token: &str) -> Result<User, ApiError> {
-    Ok(veloasm::fetch_json(&authed(ME_PATH, token).url()).await?)
+    let reply: MeReply = veloasm::fetch_json(&authed(ME_PATH, token).url()).await?;
+    Ok(reply.user)
 }
 
 // ---------------------------------------------------------------------------
@@ -218,14 +156,10 @@ pub async fn emergency_shutdown(token: &str) -> Result<String, ApiError> {
     Ok(reply.message)
 }
 
-/// Telemetry WebSocket URL with the token as query (headers impossible).
-/// Derives ws(s):// from the http(s):// base.
-pub fn telemetry_url(token: &str) -> String {
-    let http = if token.is_empty() {
-        with_base(TELEMETRY_PATH)
-    } else {
-        format!("{}?token={token}", with_base(TELEMETRY_PATH))
-    };
+/// Telemetry WebSocket URL. The socket is public (no token needed), so this
+/// is just a ws(s):// derivation of the http(s):// base.
+pub fn telemetry_url() -> String {
+    let http = with_base(TELEMETRY_PATH);
     if let Some(rest) = http.strip_prefix("https://") {
         format!("wss://{rest}")
     } else if let Some(rest) = http.strip_prefix("http://") {

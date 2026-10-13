@@ -35,8 +35,7 @@ fn open_socket(app: &AppState) {
     close_socket_only();
     app.conn.set(ConnStatus::Connecting);
 
-    let token = app.auth.get().map(|a| a.token).unwrap_or_default();
-    let url = api::telemetry_url(&token);
+    let url = api::telemetry_url();
     let ws = match web_sys::WebSocket::new(&url) {
         Ok(ws) => ws,
         Err(err) => {
